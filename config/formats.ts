@@ -23,6 +23,23 @@ export const Formats: FormatList = [
 	///////////////////////////////////////////////////////////////////
 
 	{
+		section: "Cinders League Draft"
+	},
+	{
+		name: "[Nat Dex] Triple Battle",
+
+		mod: 'gen9',
+		gameType: 'triples',
+		searchShow: false,
+		battle: {trunc: Math.trunc},
+		debug: true,
+		ruleset: ['Standard NatDex', 'OHKO Clause', 'Evasion Clause', 'Species Clause', 'Sleep Clause Mod'],
+		banlist: [
+			'ND Uber', 'ND AG', 'Arena Trap', 'Moody', 'Power Construct', 'Shadow Tag', 'King\'s Rock',
+			'Quick Claw', 'Razor Fang', 'Assist', 'Baton Pass', 'Last Respects', 'Shed Tail',
+		],
+	},
+	{
 		section: "S/V Singles",
 	},
 	{
