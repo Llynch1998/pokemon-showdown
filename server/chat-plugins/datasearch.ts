@@ -106,11 +106,15 @@ export const commands: Chat.ChatCommands = {
 				target = split.join(',');
 			}
 		}
+		const defaultFormat = this.extractFormat(room?.settings.defaultFormat || room?.battle?.format);
 		if (!target.includes('mod=')) {
-			const dex = this.extractFormat(room?.settings.defaultFormat || room?.battle?.format).dex;
+			const dex = defaultFormat.dex;
 			if (dex) target += `, mod=${dex.currentMod}`;
 		}
-		if (cmd === 'nds') target += ', natdex';
+		if (cmd === 'nds' ||
+			(defaultFormat.format && Dex.formats.getRuleTable(defaultFormat.format).has('standardnatdex'))) {
+			target += ', natdex';
+		}
 		const response = await runSearch({
 			target,
 			cmd: 'dexsearch',
@@ -1259,9 +1263,11 @@ function runDexsearch(target: string, cmd: string, canAll: boolean, message: str
 
 			const format = Object.entries(Dex.data.Rulesets).find(([a, f]) => f.mod === usedMod);
 			const formatStr = format ? format[1].name : 'gen9ou';
-			const validator = TeamValidator.get(
-				`${formatStr}${nationalSearch && !Dex.formats.getRuleTable(Dex.formats.get(formatStr)).has('standardnatdex') ? '@@@standardnatdex' : ''}`
-			);
+			const ruleTable = Dex.formats.getRuleTable(Dex.formats.get(formatStr));
+			const additionalRules = [];
+			if (nationalSearch && !ruleTable.has('standardnatdex')) additionalRules.push('standardnatdex');
+			if (nationalSearch && ruleTable.valueRules.has('minsourcegen')) additionalRules.push('!!minsourcegen=3');
+			const validator = TeamValidator.get(`${formatStr}${additionalRules.length ? `@@@${additionalRules.join(',')}` : ''}`);
 			const pokemonSource = validator.allSources();
 			for (const move of Object.keys(alts.moves).map(x => mod.moves.get(x))) {
 				if (move.gen <= mod.gen && !validator.checkCanLearn(move, dex[mon], pokemonSource) === alts.moves[move.id]) {
@@ -1485,7 +1491,7 @@ function runMovesearch(target: string, cmd: string, canAll: boolean, message: st
 			if (target === 'crit' || toID(target) === 'highcrit') target = 'highcrit';
 			if (['thaw', 'thaws', 'melt', 'melts', 'defrosts'].includes(target)) target = 'defrost';
 			if (target === 'slices' || target === 'slice') target = 'slicing';
-			if (target === 'sheerforce') target = 'secondary';
+			if (toID(target) === 'sheerforce') target = 'secondary';
 			if (target === 'bounceable' || toID(target) === 'magiccoat' || toID(target) === 'magicbounce') target = 'reflectable';
 			if (allFlags.includes(target)) {
 				if ((orGroup.flags[target] && isNotSearch) || (orGroup.flags[target] === false && !isNotSearch)) {
