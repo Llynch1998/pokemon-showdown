@@ -938,6 +938,9 @@ export class Pokemon {
 				if (!this.hasType('Ghost')) {
 					target = this.battle.dex.moves.get('curse').nonGhostTarget || moveSlot.target;
 				}
+			// Heal Block only prevents Pollen Puff from targeting an ally when the user has Heal Block
+			} else if (moveSlot.id === 'pollenpuff' && this.volatiles['healblock']) {
+				target = 'adjacentFoe';
 			}
 			let disabled = moveSlot.disabled;
 			if (this.volatiles['dynamax']) {
@@ -1187,7 +1190,7 @@ export class Pokemon {
 		const species = pokemon.species;
 		if (pokemon.fainted || this.illusion || pokemon.illusion || (pokemon.volatiles['substitute'] && this.battle.gen >= 5) ||
 			(pokemon.transformed && this.battle.gen >= 2) || (this.transformed && this.battle.gen >= 5) ||
-			species.name === 'Eternatus-Eternamax') {
+			species.name === 'Eternatus-Eternamax' || (species.baseSpecies === 'Ogerpon' && this.terastallized)) {
 			return false;
 		}
 
@@ -1363,7 +1366,10 @@ export class Pokemon {
 						this.battle.add('-primal', this, species.requiredItem);
 					}
 				} else {
-					this.battle.add('-mega', this, apparentSpecies, species.requiredItem);
+					// So a Mega Evolution message isn't sent while we're waiting on Ogerpon text
+					if (source.megaEvolves) {
+						this.battle.add('-mega', this, apparentSpecies, species.requiredItem);
+					}
 					this.moveThisTurnResult = true; // Mega Evolution counts as an action for Truant
 				}
 			} else if (source.effectType === 'Status') {
